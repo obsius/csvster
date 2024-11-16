@@ -1,0 +1,50 @@
+{
+	"name": "csvster",
+	"version": "0.0.0",
+	"description": "Quick and simple CSV reader and writer.",
+	"homepage": "https://github.com/obsius/csvster",
+	"author": "Jeff Seaman <mr.jeffrey.seaman@gmail.com> (obsius.net)",
+	"license": "MIT",
+	"main": "lib/index.js",
+	"files": [
+		"/lib"
+	],
+	"scripts": {
+		"benchmarks": "babel-node --max_old_space_size=16384 test --benchmarks",
+		"prepare": "rollup --bundleConfigAsCjs -c",
+		"test": "babel-node test"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.26.0",
+		"@babel/node": "^7.26.0",
+		"@babel/plugin-proposal-class-properties": "^7.18.6",
+		"@babel/preset-env": "^7.26.0",
+		"@rollup/plugin-babel": "^6.0.4",
+		"nodemon": "^3.1.7",
+		"rollup": "^4.26.0"
+	},
+	"babel": {
+		"plugins": [
+			"@babel/plugin-proposal-class-properties"
+		],
+		"presets": [
+			[
+				"@babel/preset-env",
+				{
+					"targets": {
+						"node": "current"
+					}
+				}
+			]
+		]
+	},
+	"keywords": [
+		"csv",
+		"read",
+		"write",
+		"parse",
+		"serialize",
+		"quick",
+		"fast"
+	]
+}
