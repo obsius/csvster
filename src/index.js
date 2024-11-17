@@ -240,6 +240,7 @@ export default class Csvster {
 			let string = write(this.header, this.delimiter, this.lineDelimiter);
 
 			this.lineNum++;
+			this.charIndex += row.length;
 
 			return string;
 
@@ -294,6 +295,7 @@ export default class Csvster {
 			let string = write(arrayOrObject, this.delimiter, this.lineDelimiter);
 
 			this.lineNum++;
+			this.charIndex += string.length;
 
 			return string;
 
@@ -377,16 +379,14 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				write: function (chunk, encoding, callback) {
-					csvster.readPartial(chunk, onRow);
+					csvster.readPartial(chunk, (row) => onRow(row, csvster.rowIndex, csvster.charIndex));
 					callback();
 				},
 				final: function (callback) {
-					csvster.flush(onRow);
+					csvster.flush((row) => onRow(row, csvster.rowIndex, csvster.charIndex));
 					callback();
 				}
 			});
-
-			reader.on('close', () => onRow(null));
 
 		// stream transform
 		} else {
@@ -407,6 +407,30 @@ export default class Csvster {
 		reader.abort = () => controller.abort();
 
 		return reader;
+	}
+
+	/**
+	 * Returns a promise that resolves when the read stream closes.
+	 * 
+	 * @param { stream } stream - read stream
+	 * @param { fn } onRow - callback
+	 * @param { object } [options] - optional constructor properties
+	 */
+	static readStream(stream, onRow, options) {
+		return new Promise((res, rej) => {
+			try {
+				
+				let reader = Csvster.reader(options, onRow);
+				let pipe = stream.pipe(reader);
+
+				stream.on('error', rej);
+				pipe.on('error', rej);
+				pipe.on('close', res);
+
+			} catch (e) {
+				rej(e);
+			}
+		});
 	}
 
 	/**
@@ -436,17 +460,14 @@ export default class Csvster {
 		let writer;
 
 		if (onRow) {
-
 			writer = new Writable({
 				objectMode: true,
 				signal: controller.signal,
 				write: function (chunk, encoding, callback) {
-					onRow(csvster.writeRow(chunk));
+					onRow(csvster.writeRow(chunk), csvster.rowIndex, csvster.charIndex);
 					callback();
 				}
 			});
-
-			writer.on('close', () => onRow(null));
 
 		} else {
 			writer = new Transform({
@@ -461,6 +482,40 @@ export default class Csvster {
 		writer.abort = () => controller.abort();
 
 		return writer;
+	}
+
+	/**
+	 * Returns a promise that resolves when the write stream closes. 
+	 * 
+	 * @param { stream } stream - write stream
+	 * @param { fn } pushRow - callback to accept a row (write null to finish)
+	 * @param { object } [options] - optional constructor properties
+	 */
+	static writeStream(stream, pushRow, options) {
+		return new Promise(async (res, rej) => {
+			try {
+
+				let writer = Csvster.writer(options);
+				let pipe = writer.pipe(stream);
+
+				stream.on('error', rej);
+				pipe.on('error', rej);
+				pipe.on('close', res);
+
+				pushRow((row) => {
+					if (row) {
+						if (!writer.write(row)) {
+							return new Promise((res) => writer.once('drain', res));
+						}
+					} else {
+						writer.end();
+					}
+				});
+
+			} catch (e) {
+				rej(e);
+			}
+		});
 	}
 }
 

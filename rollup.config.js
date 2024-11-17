@@ -2,7 +2,6 @@ import babel from '@rollup/plugin-babel';
 
 export default {
 	external: [
-		'fs',
 		'stream'
 	],
 	input: 'src/index.js',
