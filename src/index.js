@@ -378,18 +378,27 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				write: function (chunk, encoding, callback) {
+					try {
 
-					csvster.readPartial(chunk, (row) => {
-						if (!this.aborted) {
-							onRow(row, csvster.rowIndex, csvster.charIndex);
-						}
-					});
+						csvster.readPartial(chunk, (row) => {
+							if (!this.aborted) {
+								onRow(row, csvster.rowIndex, csvster.charIndex);
+							}
+						});
 
-					callback();
+						callback();
+
+					} catch (e) {
+						callback(e);
+					}
 				},
 				final: function (callback) {
-					csvster.flush((row) => onRow(row, csvster.rowIndex, csvster.charIndex));
-					callback();
+					try {
+						csvster.flush((row) => onRow(row, csvster.rowIndex, csvster.charIndex));
+						callback();
+					} catch (e) {
+						callback(e);
+					}
 				}
 			});
 
@@ -399,18 +408,26 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				transform: function (chunk, encoding, callback) {
+					try {
 
-					csvster.readPartial(chunk, (row) => {
-						if (!this.aborted) {
-							this.push(row)
-						}
-					});
+						csvster.readPartial(chunk, (row) => {
+							if (!this.aborted) {
+								this.push(row)
+							}
+						});
 
-					callback();
+						callback();
+					} catch (e) {
+						callback(e);
+					}
 				},
 				final: function (callback) {
-					csvster.flush((row) => this.push(row));
-					callback();
+					try {
+						csvster.flush((row) => this.push(row));
+						callback();
+					} catch (e) {
+						callback(e);
+					}
 				}
 			});
 		}
