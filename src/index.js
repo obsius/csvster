@@ -96,11 +96,11 @@ export default class Csvster {
 				}
 			}
 
-			let i = read(buffer, this.delimiter, (row) => {
+			let charsRead = read(buffer, this.delimiter, (row, rowCharsRead) => {
 
 				this.lineNum++;
 				this.lineCharIndex = this.charIndex;
-				this.charIndex += i;
+				this.charIndex += rowCharsRead;
 
 				// skip empty lines
 				if (this.skipEmptyLines) {
@@ -172,8 +172,8 @@ export default class Csvster {
 			});
 
 			// buffer remaining data for next read
-			if (i < buffer.length) {
-				this.buffer = buffer.slice(i);
+			if (charsRead < buffer.length) {
+				this.buffer = buffer.slice(charsRead);
 			} else {
 				this.buffer = null;
 			}

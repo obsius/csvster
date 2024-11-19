@@ -35,7 +35,7 @@ export default function read(bufferOrString, delimiter, onRow) {
 
 					if (bufferOrString[i] == NEWLINE) {
 
-						onRow(parts);
+						onRow(parts, (i - l) + 1);
 
 						parts = [];
 						l = i + 1;
