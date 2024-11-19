@@ -98,7 +98,9 @@ export default class Csvster {
 
 			let i = read(buffer, this.delimiter, (row) => {
 
-				++this.lineNum;
+				this.lineNum++;
+				this.lineCharIndex = this.charIndex;
+				this.charIndex += i;
 
 				// skip empty lines
 				if (this.skipEmptyLines) {
@@ -175,9 +177,6 @@ export default class Csvster {
 			} else {
 				this.buffer = null;
 			}
-
-			this.lineCharIndex = this.charIndex;
-			this.charIndex += i;
 
 			if (!onRow) {
 				return rows;
@@ -379,7 +378,13 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				write: function (chunk, encoding, callback) {
-					csvster.readPartial(chunk, (row) => onRow(row, csvster.rowIndex, csvster.charIndex));
+
+					csvster.readPartial(chunk, (row) => {
+						if (!this.aborted) {
+							onRow(row, csvster.rowIndex, csvster.charIndex);
+						}
+					});
+
 					callback();
 				},
 				final: function (callback) {
@@ -394,7 +399,13 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				transform: function (chunk, encoding, callback) {
-					csvster.readPartial(chunk, (row) => this.push(row));
+
+					csvster.readPartial(chunk, (row) => {
+						if (!this.aborted) {
+							this.push(row)
+						}
+					});
+
 					callback();
 				},
 				final: function (callback) {
@@ -404,7 +415,12 @@ export default class Csvster {
 			});
 		}
 
-		reader.abort = () => controller.abort();
+		reader.abort = () => {
+			if (!reader.aborted) {
+				reader.aborted = true;
+				controller.abort();
+			}
+		};
 
 		return reader;
 	}
@@ -464,7 +480,11 @@ export default class Csvster {
 				objectMode: true,
 				signal: controller.signal,
 				write: function (chunk, encoding, callback) {
-					onRow(csvster.writeRow(chunk), csvster.rowIndex, csvster.charIndex);
+
+					if (!this.aborted) {
+						onRow(csvster.writeRow(chunk), csvster.rowIndex, csvster.charIndex);
+					}
+
 					callback();
 				}
 			});
@@ -474,12 +494,21 @@ export default class Csvster {
 				writableObjectMode: true,
 				signal: controller.signal,
 				transform: function (chunk, encoding, callback) {
-					callback(null, csvster.writeRow(chunk));
+					if (this.aborted) {
+						callback();
+					} else {
+						callback(null, csvster.writeRow(chunk));
+					}
 				}
 			});
 		}
 
-		writer.abort = () => controller.abort();
+		writer.abort = () => {
+			if (!writer.aborted) {
+				writer.aborted = true;
+				controller.abort();
+			}
+		};
 
 		return writer;
 	}
