@@ -1,6 +1,6 @@
 {
 	"name": "csvster",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Quick and simple CSV reader and writer.",
 	"homepage": "https://github.com/obsius/csvster",
 	"author": "Jeff Seaman <mr.jeffrey.seaman@gmail.com> (obsius.net)",

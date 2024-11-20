@@ -23,6 +23,7 @@ export default class Csvster {
 	 * @param { boolean } [params.cast] - cast values to their most likely json types (bool, number, or string)
 	 * @param { boolean } [params.skipEmptyLines] - skip empty lines (lines with no columns or all empty columns)
 	 * @param { boolean } [params.keepBom] - keep a file byte order mark in returned rows (if found in file)
+	 * @param { boolean } [params.ignoreColumnCount] - do not throw an error if rows have too many or missing columns
 	 * @param { string | null } [params.delimeter] - csv column delimiter, set to null to autodetect
 	 * @param { string } [params.lineDelimeter] - csv line column delimiter (only used for write mode)
 	 */
@@ -32,6 +33,7 @@ export default class Csvster {
 		cast = false,
 		skipEmptyLines = false,
 		keepBom = false,
+		ignoreColumnCount = false,
 		delimiter = DEFUALT_DELIM,
 		lineDelimiter = DEFAULT_LINE_DELIM
 	} = {}) {
@@ -40,6 +42,7 @@ export default class Csvster {
 		this.cast = cast;
 		this.skipEmptyLines = skipEmptyLines;
 		this.keepBom = keepBom;
+		this.ignoreColumnCount = ignoreColumnCount;
 		this.delimiter = delimiter;
 		this.lineDelimiter = lineDelimiter;
 	}
@@ -134,7 +137,9 @@ export default class Csvster {
 
 				// check row length
 				if (this.rowLength) {
-					checkRowLength(row.length, this.rowLength);
+					if (!this.ignoreColumnCount) {
+						checkRowLength(row.length, this.rowLength);
+					}
 				} else {
 					this.rowLength = row.length;
 				}
@@ -285,7 +290,9 @@ export default class Csvster {
 			// check row length (only enforce arrays, objects will write out empty values)
 			if (Array.isArray(arrayOrObject)) {
 				if (this.rowLength) {
-					checkRowLength(arrayOrObject.length, this.rowLength);
+					if (!this.ignoreColumnCount) {
+						checkRowLength(arrayOrObject.length, this.rowLength);
+					}
 				} else {
 					this.rowLength = arrayOrObject.length;
 				}
