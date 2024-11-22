@@ -17,17 +17,27 @@ import Csvster from 'csvster';
 // onRow is optional
 Csvster.read(bufferOrString, options, onRow);
 
-// read from a stream
+// return a stream object (writable or transform)
 // onRow is optional
 Csvster.reader(options, onRow);
+
+// resolves after the stream has been read
+// onRow is called for each row read
+// options are optional
+await Csvster.readStream(stream, onRow, options);
 
 // write rows (array of arrays or objects)
 // onRow is optional
 Csvster.write(arraysOrObjects, options, onRow);
 
-// write from a stream
+// return a stream object (writable or transform)
 // onRow is optional
 Csvster.writer(options, onRow);
+
+// resolves after the stream has been written
+// pushRow is called once and returns a function that takes row data (array or object)
+// options are optional
+await Csvster.writeStream(stream, pushRow, options);
 
 // class methods (for custom implementations and not normally needed)
 
