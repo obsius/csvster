@@ -101,7 +101,8 @@ export default class Csvster {
 
 			let charsRead = read(buffer, this.delimiter, (row, rowCharsRead) => {
 
-				this.lineNum++;
+				let skip = false;
+
 				this.lineCharIndex = this.charIndex;
 				this.charIndex += rowCharsRead;
 
@@ -119,61 +120,67 @@ export default class Csvster {
 						}
 					}
 
-					if (empty) {
-						return;
-					}
+					skip = empty;
 				}
 
 				// set header
-				if (this.rowIndex++ == 0) {
+				if (!skip && this.rowIndex == 0) {
 					if (this.header === true) {
 
 						this.header = checkHeader(row);
 						this.rowLength = this.header.length;
 
-						return;
+						skip = true;
 					}
 				}
 
-				// check row length
-				if (this.rowLength) {
-					if (!this.ignoreColumnCount) {
-						checkRowLength(row.length, this.rowLength);
-					}
-				} else {
-					this.rowLength = row.length;
-				}
+				// process a row
+				if (!skip) {
 
-				// cast datatypes
-				if (this.cast) {
-					for(let i = 0; i < row.length; ++i) {
-						if (REGEX_BOOL_TRUE.test(row[i])) {
-							row[i] = true;
-						} else if (REGEX_BOOL_FALSE.test(row[i])) {
-							row[i] = false;
-						} else if (REGEX_NUMBER.test(row[i])) {
-							row[i] = parseFloat(row[i]);
+					// check row length
+					if (this.rowLength) {
+						if (!this.ignoreColumnCount) {
+							checkRowLength(row.length, this.rowLength);
+						}
+					} else {
+						this.rowLength = row.length;
+					}
+
+					// cast datatypes
+					if (this.cast) {
+						for(let i = 0; i < row.length; ++i) {
+							if (REGEX_BOOL_TRUE.test(row[i])) {
+								row[i] = true;
+							} else if (REGEX_BOOL_FALSE.test(row[i])) {
+								row[i] = false;
+							} else if (REGEX_NUMBER.test(row[i])) {
+								row[i] = parseFloat(row[i]);
+							}
 						}
 					}
-				}
 
-				// convert array to header map
-				if (this.header && this.map) {
+					// convert array to header map
+					if (this.header && this.map) {
 
-					let obj = {};
+						let obj = {};
 
-					for (let i = 0; i < this.header.length; ++i) {
-						obj[this.header[i]] = row[i];
+						for (let i = 0; i < this.header.length; ++i) {
+							obj[this.header[i]] = row[i];
+						}
+
+						row = obj;
 					}
 
-					row = obj;
+					if (onRow) {
+						onRow(row);
+					} else {
+						rows.push(row);
+					}
+
+					this.rowIndex++;
 				}
 
-				if (onRow) {
-					onRow(row);
-				} else {
-					rows.push(row);
-				}
+				this.lineNum++;
 			});
 
 			// buffer remaining data for next read

@@ -1,6 +1,6 @@
 {
 	"name": "csvster",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Quick and simple CSV reader and writer.",
 	"homepage": "https://github.com/obsius/csvster",
 	"author": "Jeff Seaman <mr.jeffrey.seaman@gmail.com> (obsius.net)",
@@ -21,7 +21,7 @@
 		"@babel/preset-env": "^7.26.0",
 		"@rollup/plugin-babel": "^6.0.4",
 		"nodemon": "^3.1.7",
-		"rollup": "^4.27.3"
+		"rollup": "^4.28.0"
 	},
 	"babel": {
 		"plugins": [

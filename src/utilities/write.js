@@ -35,7 +35,6 @@ export default function write(array, delimiter = DEFUALT_DELIM, lineDelimiter = 
 			case 'undefined':
 
 				if (element == null) {
-					string += 'null';
 					break;
 				}
 
